@@ -1,0 +1,16 @@
+--------------------------------
+%company%
+Data: %date%
+Venda #: %sale_id%
+Vendedor: %seller%
+--------------------------------
+QTD  NOME DO PRODUTO     SUBTOTAL
+--------------------------------
+[ITEMS]
+%qty%x %name%   R$ %subtotal%
+[/ITEMS]
+--------------------------------
+TOTAL DA VENDA:      R$ %total%
+FORMA DE PAGTO:      %payment%
+--------------------------------
+Obrigado e volte sempre!
