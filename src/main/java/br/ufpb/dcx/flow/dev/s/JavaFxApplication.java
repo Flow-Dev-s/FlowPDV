@@ -9,15 +9,16 @@ import br.ufpb.dcx.flow.dev.s.service.*;
 import br.ufpb.dcx.flow.dev.s.view.CheckoutView;
 import br.ufpb.dcx.flow.dev.s.view.HistoryView;
 import br.ufpb.dcx.flow.dev.s.view.StockView;
-import br.ufpb.dcx.lima.albiere.model.*;
-import br.ufpb.dcx.lima.albiere.service.*;
-import br.ufpb.dcx.lima.albiere.view.*;
+import br.ufpb.dcx.flow.dev.s.model.*;
+import br.ufpb.dcx.flow.dev.s.service.*;
+import br.ufpb.dcx.flow.dev.s.view.*;
 import br.ufpb.dcx.flow.dev.s.view.seller.LoginView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -28,7 +29,9 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
 
 public class JavaFxApplication extends Application {
 
@@ -102,6 +105,7 @@ public class JavaFxApplication extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/MenuStyle.css").toExternalForm());
         stage.setTitle("Sistema de Gestão ERP/PDV");
         stage.setScene(scene);
+        stage.getIcons().add(new Image(Objects.requireNonNull(JavaFxApplication.class.getResourceAsStream("/icons/icon.png"))));
         stage.show();
 
         updateSalePermission();
