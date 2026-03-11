@@ -9,15 +9,13 @@ import br.ufpb.dcx.flow.dev.s.service.*;
 import br.ufpb.dcx.flow.dev.s.view.CheckoutView;
 import br.ufpb.dcx.flow.dev.s.view.HistoryView;
 import br.ufpb.dcx.flow.dev.s.view.StockView;
-import br.ufpb.dcx.lima.albiere.model.*;
-import br.ufpb.dcx.lima.albiere.service.*;
-import br.ufpb.dcx.lima.albiere.view.*;
 import br.ufpb.dcx.flow.dev.s.view.seller.LoginView;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -28,6 +26,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class JavaFxApplication extends Application {
@@ -47,9 +46,10 @@ public class JavaFxApplication extends Application {
     private javafx.collections.ObservableList<Product> masterProductList = javafx.collections.FXCollections.observableArrayList();
 
     private MenuButton userMenu;
-    private MenuItem tradeSeller;
+    private MenuItem changeSeller;
     private MenuItem logoutSeller;
-    private Button btnRegister;
+    private Button btnCashRegister;
+    private Seller loggedSeller;
 
     String menuStyle = "-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;";
 
@@ -71,20 +71,20 @@ public class JavaFxApplication extends Application {
 
         mainHeader = createHeader();
 
-        historyView = HistoryView.display(historyTable, saleClicada -> {
+        historyView = HistoryView.display(historyTable, clickedSale -> {
 
             VBox checkoutNode = CheckoutView.display(productService, saleService, stockService);
             mainLayout.setCenter(checkoutNode);
             mainLayout.setTop(null);
 
-            List<ItemRequest> novosItens = new ArrayList<>();
-            saleClicada.getItems().forEach(item -> {
-                novosItens.add(new ItemRequest(item.getProduct().getBarcode(), item.getQuantity()));
+            List<ItemRequest> newItems = new ArrayList<>();
+            clickedSale.getItems().forEach(item -> {
+                newItems.add(new ItemRequest(item.getProduct().getBarcode(), item.getQuantity()));
             });
 
-            CheckoutView.resetCart(novosItens, productService);
+            CheckoutView.resetCart(newItems, productService);
             CheckoutView.setViewMode(true);
-            CheckoutView.setTitle("Visualizando Venda #" + saleClicada.getId());
+            CheckoutView.setTitle("Visualizando Venda #" + clickedSale.getId());
 
             CheckoutView.setOnBackAction(() -> {
                 mainLayout.setCenter(historyView);
@@ -102,6 +102,7 @@ public class JavaFxApplication extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/MenuStyle.css").toExternalForm());
         stage.setTitle("Sistema de Gestão ERP/PDV");
         stage.setScene(scene);
+        stage.getIcons().add(new Image(Objects.requireNonNull(JavaFxApplication.class.getResourceAsStream("/icons/icon.png"))));
         stage.show();
 
         updateSalePermission();
@@ -111,32 +112,32 @@ public class JavaFxApplication extends Application {
         Platform.runLater(() -> {
             CashRegisterService registerService = springContext.getBean(CashRegisterService.class);
             boolean isRegisterOpen = registerService.getCashRegisterOpen().isPresent();
-            boolean isSellerAuthenticated = (this.logged != null);
+            boolean isSellerAuthenticated = (this.loggedSeller != null);
 
             boolean canSell = isRegisterOpen && isSellerAuthenticated;
 
             if (isSellerAuthenticated) {
-                userMenu.setText("👤 Vendedor: " + logged.getName());
-                tradeSeller.setText("🔄 Trocar Usuário");
+                userMenu.setText("👤 Vendedor: " + loggedSeller.getName());
+                changeSeller.setText("🔄 Trocar Usuário");
                 logoutSeller.setVisible(true);
             } else {
                 userMenu.setText("👤 Vendedor: Visitante");
-                tradeSeller.setText("🔑 Fazer Login");
+                changeSeller.setText("🔑 Fazer Login");
                 logoutSeller.setVisible(false);
             }
 
             CheckoutView.setBarcodeDisabled(!canSell);
 
             if (!isRegisterOpen) {
-                btnRegister = new Button("️⚙️ Abrir o Caixa");
+                btnCashRegister.setText("️⚙️ Abrir o Caixa");
                 CheckoutView.setStatusLabel("⚠️ O Caixa está fechado. Abra-o para vender.", "-fx-text-fill: #e67e22;");
             } else {
-                btnRegister = new Button("️⚙️ Fechar o Caixa");
+                btnCashRegister.setText("️⚙️ Fechar o Caixa");
             }
             if (!isSellerAuthenticated) {
                 CheckoutView.setStatusLabel("👤 Identifique o vendedor para iniciar as vendas.", "-fx-text-fill: #3498db;");
             } else {
-                CheckoutView.setStatusLabel("✅ Caixa pronto! Vendedor: " + logged.getName(), "-fx-text-fill: #27ae60;");
+                CheckoutView.setStatusLabel("✅ Caixa pronto! Vendedor: " + loggedSeller.getName(), "-fx-text-fill: #27ae60;");
             }
         });
     }
@@ -151,16 +152,17 @@ public class JavaFxApplication extends Application {
         Button btnCheckout = new Button("🛒 Vender (PDV)");
         Button btnStock = new Button("📦 Estoque");
         Button btnHistory = new Button("📊 Histórico");
+
         if(!isRegisterOpen) {
-            btnRegister = new Button("⚙️ Abrir o Caixa");
+            btnCashRegister = new Button("⚙️ Abrir o Caixa");
         } else {
-            btnRegister = new Button("️⚙️ Fechar o Caixa");
+            btnCashRegister = new Button("️⚙️ Fechar o Caixa");
         }
 
         btnCheckout.setStyle(menuStyle);
         btnStock.setStyle(menuStyle);
         btnHistory.setStyle(menuStyle);
-        btnRegister.setStyle(menuStyle);
+        btnCashRegister.setStyle(menuStyle);
 
         btnCheckout.setOnAction(e -> mainLayout.setCenter(checkoutView));
         btnStock.setOnAction(e -> {
@@ -172,30 +174,30 @@ public class JavaFxApplication extends Application {
             mainLayout.setCenter(historyView);
         });
 
-        btnRegister.setOnAction(e -> handleRegisterAction());
+        btnCashRegister.setOnAction(e -> handleCashRegisterAction());
 
         userMenu = new MenuButton("👤 Vendedor: Visitante");
         userMenu.getStyleClass().add("menu-button");
 
-        tradeSeller = new MenuItem("🔑 Fazer Login");
+        changeSeller = new MenuItem("🔑 Fazer Login");
         logoutSeller = new MenuItem("❌ Sair");
 
-        tradeSeller.setOnAction(e -> openLoginWindow());
+        changeSeller.setOnAction(e -> openLoginWindow());
         logoutSeller.setOnAction(e -> performLogout());
 
-        userMenu.getItems().addAll(tradeSeller, new SeparatorMenuItem(), logoutSeller);
-        header.getChildren().addAll(btnCheckout, btnStock, btnHistory, btnRegister, userMenu);
+        userMenu.getItems().addAll(changeSeller, new SeparatorMenuItem(), logoutSeller);
+        header.getChildren().addAll(btnCheckout, btnStock, btnHistory, btnCashRegister, userMenu);
         return header;
     }
 
-    private void handleRegisterAction() {
+    private void handleCashRegisterAction() {
         CashRegisterService service = springContext.getBean(CashRegisterService.class);
         Optional<CashRegister> current = service.getCashRegisterOpen();
 
         if (current.isPresent()) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Deseja fechar o caixa?", ButtonType.YES, ButtonType.NO);
-            confirm.showAndWait().ifPresent(res -> {
-                if (res == ButtonType.YES) {
+            Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION, "Deseja fechar o caixa?", ButtonType.YES, ButtonType.NO);
+            confirmAlert.showAndWait().ifPresent(response -> {
+                if (response == ButtonType.YES) {
                     service.closeRegister();
                     updateSalePermission();
                 }
@@ -212,10 +214,10 @@ public class JavaFxApplication extends Application {
                 TextInputDialog balanceDialog = new TextInputDialog("0.00");
                 balanceDialog.setTitle("Abertura de Caixa");
                 balanceDialog.setHeaderText("Troco inicial:");
-                balanceDialog.showAndWait().ifPresent(val -> {
+                balanceDialog.showAndWait().ifPresent(value -> {
                     try {
                         CheckoutView.setCurrentSeller(seller);
-                        service.openRegister(new BigDecimal(val.replace(",", ".")));
+                        service.openRegister(new BigDecimal(value.replace(",", ".")));
                         updateSalePermission();
                     } catch (Exception ex) {
                         showError("Erro", "Valor inválido!");
@@ -240,18 +242,18 @@ public class JavaFxApplication extends Application {
     }
 
     private void showInfo(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        Alert infoAlert = new Alert(Alert.AlertType.INFORMATION);
+        infoAlert.setTitle(title);
+        infoAlert.setHeaderText(null);
+        infoAlert.setContentText(content);
+        infoAlert.showAndWait();
     }
 
     private void showError(String title, String content) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(title);
-        alert.setContentText(content);
-        alert.showAndWait();
+        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+        errorAlert.setTitle(title);
+        errorAlert.setContentText(content);
+        errorAlert.showAndWait();
     }
 
     @Override
@@ -260,30 +262,28 @@ public class JavaFxApplication extends Application {
         Platform.exit();
     }
 
-    private Seller logged;
-
     private void openLoginWindow() {
         SellerService sellerService = springContext.getBean(SellerService.class);
 
         LoginView.display(sellerService, seller -> {
-            this.logged = seller;
+            this.loggedSeller = seller;
             updateSalePermission();
         });
     }
 
     private void performLogout() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Sair do Sistema");
-        alert.setHeaderText("Confirmação de Logout");
-        alert.setContentText("Deseja realmente encerrar a sessão do vendedor?");
+        Alert logoutAlert = new Alert(Alert.AlertType.CONFIRMATION);
+        logoutAlert.setTitle("Sair do Sistema");
+        logoutAlert.setHeaderText("Confirmação de Logout");
+        logoutAlert.setContentText("Deseja realmente encerrar a sessão do vendedor?");
 
         ButtonType btnYes = new ButtonType("Sim");
         ButtonType btnNo = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alert.getButtonTypes().setAll(btnYes, btnNo);
+        logoutAlert.getButtonTypes().setAll(btnYes, btnNo);
 
-        alert.showAndWait().ifPresent(response -> {
+        logoutAlert.showAndWait().ifPresent(response -> {
             if (response == btnYes) {
-                this.logged = null;
+                this.loggedSeller = null;
                 updateSalePermission();
                 mainLayout.setCenter(checkoutView);
             }

@@ -33,7 +33,6 @@ public class TemplateFormatter {
                 filledItems.append(itemLine).append("\n");
             }
             String topPart = templateTxt.substring(0, startIndex);
-            // 8 é o tamanho exato da string "[/ITEMS]"
             String bottomPart = templateTxt.substring(endIndex + 8);
 
             formattedReceipt = topPart + filledItems.toString() + bottomPart;

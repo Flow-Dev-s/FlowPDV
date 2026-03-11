@@ -29,14 +29,12 @@ public class SaleController {
 
     @GetMapping("/{id}")
     public ResponseEntity<SaleResponse> getSale(@PathVariable Long id) {
-        // Implementação básica para buscar uma venda específica
         SaleResponse response = saleService.findById(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<SaleResponse>> getAllSales() {
-        // Útil para alimentar a tabela do HistoryView
         return ResponseEntity.ok(saleService.findAllResponses());
     }
 }

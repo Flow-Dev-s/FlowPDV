@@ -22,7 +22,6 @@ import java.util.Locale;
 
 public class CheckoutView {
 
-
     private static BigDecimal currentSaleTotal = BigDecimal.ZERO;
     static List<ItemRequest> cart = new ArrayList<>();
     private static List<BigDecimal> cartPrices = new ArrayList<>();
@@ -37,10 +36,11 @@ public class CheckoutView {
     private static Button btnRemove;
     private static Button btnCancel;
     private static Runnable onBackAction;
+    private static ListView<String> cartDisplay;
+
     public static String getCurrentSeller() {
         return currentSeller;
     }
-    private static ListView<String> cartDisplay;
 
     public static void setCurrentSeller(String currentSeller) {
         CheckoutView.currentSeller = currentSeller;
@@ -144,53 +144,50 @@ public class CheckoutView {
         btnFinish.setOnAction(e -> {
             if (cart.isEmpty()) return;
 
-            PaymentView.display(saleService, currentSaleTotal, (Sale vendaSalva) -> {
+            PaymentView.display(saleService, currentSaleTotal, (Sale savedSale) -> {
 
-                Alert alertCupom = new Alert(Alert.AlertType.CONFIRMATION);
-                DialogPane dialogPane = alertCupom.getDialogPane();
-
-// Isso força o fundo escuro e evita o bug do branco
+                Alert receiptAlert = new Alert(Alert.AlertType.CONFIRMATION);
+                DialogPane dialogPane = receiptAlert.getDialogPane();
                 dialogPane.setStyle("-fx-background-color: #2c3e50;");
 
-// Criamos o texto manualmente para garantir que apareça em branco
-                Label txtAviso = new Label("Deseja imprimir o cupom agora?");
-                txtAviso.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-                VBox content = new VBox(txtAviso);
+                Label warningLabel = new Label("Deseja imprimir o cupom agora?");
+                warningLabel.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+
+                VBox content = new VBox(warningLabel);
                 content.setPadding(new Insets(20));
                 dialogPane.setContent(content);
 
-                alertCupom.setTitle("Impressão");
-                alertCupom.setHeaderText("✅ Venda Finalizada!");
+                receiptAlert.setTitle("Impressão");
+                receiptAlert.setHeaderText("✅ Venda Finalizada!");
 
-// Força o título a ficar branco também
                 dialogPane.lookup(".header-panel").setStyle("-fx-background-color: #1a252f;");
                 Label header = (Label) dialogPane.lookup(".header-panel .label");
                 if (header != null) header.setStyle("-fx-text-fill: white;");
 
-                ButtonType btnSim = new ButtonType("🖨️ Sim, Imprimir");
-                ButtonType btnNao = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);
-                alertCupom.getButtonTypes().setAll(btnSim, btnNao);
+                ButtonType btnYes = new ButtonType("🖨️ Sim, Imprimir");
+                ButtonType btnNo = new ButtonType("Não", ButtonBar.ButtonData.CANCEL_CLOSE);
+                receiptAlert.getButtonTypes().setAll(btnYes, btnNo);
 
-                alertCupom.showAndWait().ifPresent(resposta -> {
-                    if (resposta == btnSim) {
-                        String templateTxt = TemplateFormatter.readFileTemplate("/cupom_padrao.txt");
+                receiptAlert.showAndWait().ifPresent(response -> {
+                    if (response == btnYes) {
+                        String templateText = TemplateFormatter.readFileTemplate("/cupom_padrao.txt");
 
-                        String cupomPronto = TemplateFormatter.formatReceipt(
-                                templateTxt,
-                                vendaSalva,
+                        String formattedReceipt = TemplateFormatter.formatReceipt(
+                                templateText,
+                                savedSale,
                                 "ALBIERE STORE",
-                                currentSeller == null ? vendaSalva.getSellerName() : currentSeller
+                                currentSeller == null ? savedSale.getSellerName() : currentSeller
                         );
 
-                        boolean success = PrinterService.printReceipt(cupomPronto);
+                        boolean success = PrinterService.printReceipt(formattedReceipt);
 
                         if (success) {
                             setStatusLabel("✅ Cupom enviado para a impressora!", "-fx-text-fill: #27ae60;");
                         } else {
-                            Alert alertErro = new Alert(Alert.AlertType.ERROR, "Não foi possível imprimir. Verifique se a impressora padrão está conectada.");
-                            alertErro.getDialogPane().setStyle("-fx-background-color: #2c3e50;");
-                            alertErro.getDialogPane().lookup(".content.label").setStyle("-fx-text-fill: white;");
-                            alertErro.show();
+                            Alert errorAlert = new Alert(Alert.AlertType.ERROR, "Não foi possível imprimir. Verifique se a impressora padrão está conectada.");
+                            errorAlert.getDialogPane().setStyle("-fx-background-color: #2c3e50;");
+                            errorAlert.getDialogPane().lookup(".content.label").setStyle("-fx-text-fill: white;");
+                            errorAlert.show();
 
                             setStatusLabel("⚠️ Erro na impressora.", "-fx-text-fill: #e74c3c;");
                         }
@@ -201,8 +198,8 @@ public class CheckoutView {
                 cartPrices.clear();
                 cartDisplay.getItems().clear();
                 currentSaleTotal = BigDecimal.ZERO;
-                atualizarDisplayTotal();
-                // Se a impressão não mudou o status, coloca o padrão
+                updateTotalDisplay(); // Nome atualizado aqui
+
                 if (statusLabel.getText().contains("Adicionado")) {
                     setStatusLabel("✅ Caixa livre para a próxima venda.", "-fx-text-fill: #27ae60;");
                 }
@@ -304,10 +301,10 @@ public class CheckoutView {
                 System.err.println("Erro ao carregar item: " + item.code());
             }
         }
-        atualizarDisplayTotal();
+        updateTotalDisplay();
     }
 
-    public static void atualizarDisplayTotal() {
+    public static void updateTotalDisplay() {
         totalDisplay.setText(String.format(Locale.US, "Total: R$ %.2f", currentSaleTotal));
     }
 

@@ -4,7 +4,7 @@ import br.ufpb.dcx.flow.dev.s.dto.ItemRequest;
 import br.ufpb.dcx.flow.dev.s.dto.ItemResponse;
 import br.ufpb.dcx.flow.dev.s.dto.SaleRequest;
 import br.ufpb.dcx.flow.dev.s.dto.SaleResponse;
-import br.ufpb.dcx.lima.albiere.dto.*;
+import br.ufpb.dcx.flow.dev.s.dto.*;
 import br.ufpb.dcx.flow.dev.s.model.Product;
 import br.ufpb.dcx.flow.dev.s.model.Sale;
 import br.ufpb.dcx.flow.dev.s.model.SaleItem;
