@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/JavaFX-000000?style=for-the-badge&logo=java&logoColor=white" alt="JavaFX">
   <img src="https://img.shields.io/badge/H2_Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="H2">
   <img src="https://img.shields.io/badge/Linux_Ready-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Linux">
+  <img src="https://img.shields.io/badge/WINDOWS_READY-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows">
 </div>
 
 <br>
